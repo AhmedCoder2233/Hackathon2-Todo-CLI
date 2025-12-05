@@ -28,6 +28,7 @@ def print_menu():
     print("7. Add Tags to Task")
     print("8. Search Tasks")
     print("9. Process Notifications")
+    print("10. Sort Tasks")
     print("0. Exit")
     print("-----------------------")
 
@@ -336,6 +337,42 @@ def main():
                 print(f"✅ Triggered {len(triggered)} notifications.")
             else:
                 print("No pending notifications to trigger.")
+        elif choice == "10":
+            print("\n--- Sort Tasks ---")
+            print("1. Title")
+            print("2. Priority")
+            print("3. Due Date")
+            sort_choice = input("Choose sorting option: ")
+
+            if sort_choice == "1":
+                sorted_tasks = task_service.sort_tasks("title")
+            elif sort_choice == "2":
+                sorted_tasks = task_service.sort_tasks("priority")
+            elif sort_choice == "3":
+                sorted_tasks = task_service.sort_tasks("due_date")
+            else:
+                print("Invalid choice!")
+                continue
+
+            print("\n--- Sorted Tasks ---")
+            for task in sorted_tasks:
+                status = "✓" if task.is_completed else " "
+                overdue_indicator = "[OVERDUE] " if task.is_overdue() else ""
+                priority_emoji = {"High": "🔴", "Medium": "🟡", "Low": "🟢"}.get(task.priority, "")
+                tags_str = f" ({', '.join(task.tags)})" if task.tags else ""
+                karachi_display_datetime = None
+                if task.due_date and task.due_time:
+                    utc_datetime = datetime.combine(task.due_date, task.due_time, tzinfo=timezone.utc)
+                    karachi_display_datetime = utc_datetime.astimezone(KARACHI_TIMEZONE)
+                elif task.due_date:
+                    utc_datetime = datetime.combine(task.due_date, time(0,0,0), tzinfo=timezone.utc)
+                    karachi_display_datetime = utc_datetime.astimezone(KARACHI_TIMEZONE)
+
+                due_date_str = f" Due: {karachi_display_datetime.strftime('%Y-%m-%d')}" if karachi_display_datetime else ""
+                due_time_str = f" @ {karachi_display_datetime.strftime('%I:%M %p')}" if karachi_display_datetime and task.due_time else ""
+                recurrence_str = f" (Rec: {task.recurrence_type})" if task.recurrence_type else ""
+                print(f"[{status}] {overdue_indicator}{priority_emoji} {task.title}{tags_str}{due_date_str}{due_time_str}{recurrence_str} (ID: {task.id})")
+            print("-------------------")
         elif choice == "0":
             print("Goodbye!")
             break
